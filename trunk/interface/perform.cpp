@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////
 
 
-#define USE_PERFORMANCE	//uncomment to use
+//#define USE_PERFORMANCE	//uncomment to use
 
 //==========================================================================================
 // + + +   This Software is released under the "Simplified BSD License"  + + +
@@ -65,6 +65,7 @@ static quint64 QueryPerformanceCounter()
 {
 quint64 val=0;
 #ifdef USE_PERFORMANCE
+
 quint32 eax, edx;
 	__asm__ __volatile__("cpuid": : : "ax", "bx", "cx", "dx");
 	__asm__ __volatile__("rdtsc":"=a"(eax), "=d"(edx));

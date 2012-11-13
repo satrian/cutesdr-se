@@ -17,7 +17,17 @@
 
 #define MAX_DEVICES 32
 
-typedef struct __attribute__ ((__packed__)) _DISCOVER_MSG_COMMON
+/*
+As per http://stackoverflow.com/questions/1537964/visual-c-equivalent-of-gccs-attribute-packed
+*/
+#ifndef _MSC_VER
+#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+#else
+#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop) )
+#endif
+
+PACK(
+typedef struct _DISCOVER_MSG_COMMON
 {		//56 fixed common byte fields
 	unsigned char length[2]; 	//length of total message in bytes (little endian byte order)
 	unsigned char key[2];		//fixed key key[0]==0x5A  key[1]==0xA5
@@ -27,9 +37,10 @@ typedef struct __attribute__ ((__packed__)) _DISCOVER_MSG_COMMON
 	unsigned char ipaddr[16];	//device IP address (little endian byte order)
 	unsigned char port[2];		//device Port number (little endian byte order)
 	unsigned char customfield;	//Specifies a custom data field for a particular device
-}tDiscover_COMMONMSG;
+}tDiscover_COMMONMSG);
 
-typedef struct __attribute__ ((__packed__)) _DISCOVER_MSG_NETSDR
+PACK(
+typedef struct _DISCOVER_MSG_NETSDR
 {		//56 fixed common byte fields
 	unsigned char length[2]; 	//length of total message in bytes (little endian byte order)
 	unsigned char key[2];		//fixed key key[0]==0x5A  key[1]==0xA5
@@ -55,9 +66,10 @@ typedef struct __attribute__ ((__packed__)) _DISCOVER_MSG_NETSDR
 	unsigned char fpga;			//0 == default cfg   1==custom1    2==custom2
 	unsigned char status;		//bit 0 == TCP connected   Bit 1 == running  Bit 2-7 not defined
 	unsigned char future[15];	//future use
-}tDiscover_NETSDR;
+}tDiscover_NETSDR);
 
-typedef struct __attribute__ ((__packed__)) _DISCOVER_MSG_SDRXX
+PACK(
+typedef struct _DISCOVER_MSG_SDRXX
 {		//56 fixed common byte fields
 	unsigned char length[2]; 	//length of total message in bytes (little endian byte order)
 	unsigned char key[2];		//fixed key key[0]==0x5A  key[1]==0xA5
@@ -75,7 +87,7 @@ typedef struct __attribute__ ((__packed__)) _DISCOVER_MSG_SDRXX
 	char connection[32];		//interface connection string null terminated(ex: COM3, DEVTTY5, etc)
 	unsigned char status;		//bit 0 == TCP connected   Bit 1 == running  Bit 2-7 not defined
 	unsigned char future[15];	//future use
-}tDiscover_SDRxx;
+}tDiscover_SDRxx);
 
 #define STATUS_BIT_CONNECTED (1)
 #define STATUS_BIT_RUNNING (2)

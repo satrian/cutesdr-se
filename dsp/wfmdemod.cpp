@@ -406,7 +406,7 @@ TYPECPX tmp;
 //m_PilotPhaseAdjust = g_TestValue;
 	for(int i=0; i<InLength; i++)	//175 nSec
 	{
-#if 1
+#if 0
 		asm volatile ("fsincos" : "=%&t" (Cos), "=%&u" (Sin) : "0" (m_PilotNcoPhase));	//126nS
 #else
 		Sin = sin(m_PilotNcoPhase);		//178ns for sin/cos calc
@@ -556,7 +556,7 @@ double Cos;
 TYPECPX tmp;
 	for(int i=0; i<InLength; i++)
 	{
-#if 1
+#if 0
 		asm volatile ("fsincos" : "=%&t" (Cos), "=%&u" (Sin) : "0" (m_RdsNcoPhase));	//126nS
 #else
 		Sin = sin(m_RdsNcoPhase);		//178ns for sin/cos calc

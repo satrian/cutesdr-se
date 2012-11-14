@@ -43,6 +43,7 @@
 /*------------------------> I N C L U D E S <--------------------------------*/
 /*---------------------------------------------------------------------------*/
 #include "interface/netiobase.h"
+#include "interface/sdrinterface.h"
 #include <QtDebug>
 
 
@@ -457,6 +458,9 @@ CNetIOBase* pParent = (CNetIOBase*)m_pParent;
 	m_pUdpSocket = NULL;
 }
 
+// defined globally in sdrinterface.cpp
+extern int g_m_RadioType;
+extern int g_m_RadioType_SDRMK15;
 
 //////////////////////////////////////////////////////////////////////////
 // Called when UDP Rx data is available then converts to float and puts in FIFO
@@ -474,7 +478,7 @@ CNetIOBase* pParent = (CNetIOBase*)m_pParent;
 	seq.all = 0;
 	pParent->m_UdpRxMutex.lock();
 	while( m_pUdpSocket->hasPendingDatagrams() && !pParent->m_UdpThreadQuit)
-	{
+	{		
 		size = m_pUdpSocket->pendingDatagramSize();
 		if(PKT_LENGTH_24 == size)
 		{	//24 bit I/Q data
@@ -493,11 +497,25 @@ CNetIOBase* pParent = (CNetIOBase*)m_pParent;
 			m_LastSeqNum++;
 			if(0==m_LastSeqNum)
 				m_LastSeqNum = 1;
+
+			data.bytes.b0 = 0;
+
 			for( i=4,j=0; i<size; i+=3,j++)
 			{
-				data.bytes.b1 = Buf[i];		//combine 3 bytes into 32 bit signed int
-				data.bytes.b2 = Buf[i+1];
-				data.bytes.b3 = Buf[i+2];
+				if (g_m_RadioType == g_m_RadioType_SDRMK15)
+				{
+					// big endian rx data					
+					data.bytes.b1 = Buf[i+2];		//combine 3 bytes into 32 bit signed int
+					data.bytes.b2 = Buf[i+1];
+					data.bytes.b3 = Buf[i];
+				}
+				else
+				{
+					//little endian rx data
+					data.bytes.b1 = Buf[i];			//combine 3 bytes into 32 bit signed int
+					data.bytes.b2 = Buf[i+1];
+					data.bytes.b3 = Buf[i+2];					
+				}
 				pParent->m_pUdpRxQueue[pParent->m_RxQueueHead][j] = (double)data.all/65536.0;	//scale to be +-32768 range same as 16 bit data
 			}
 		}
@@ -518,10 +536,24 @@ CNetIOBase* pParent = (CNetIOBase*)m_pParent;
 			m_LastSeqNum++;
 			if(0==m_LastSeqNum)
 				m_LastSeqNum = 1;
+
+			data.bytes.b2 = 0;
+			data.bytes.b3 = 0;
+
 			for( i=4,j=0; i<size; i+=2,j++)
 			{
-				seq.bytes.b0 = Buf[i+0];	//use 'seq' as temp variable to combine bytes into short int
-				seq.bytes.b1 = Buf[i+1];
+				if (g_m_RadioType == g_m_RadioType_SDRMK15)
+				{
+					// big endian rx data
+					seq.bytes.b0 = Buf[i+1];	//use 'seq' as temp variable to combine bytes into short int
+					seq.bytes.b1 = Buf[i+0];
+				}
+				else
+				{
+					// little endian rx data
+					seq.bytes.b0 = Buf[i+0];	//use 'seq' as temp variable to combine bytes into short int
+					seq.bytes.b1 = Buf[i+1];
+				}
 				pParent->m_pUdpRxQueue[pParent->m_RxQueueHead][j] = (double)seq.sall;
 			}
 		}

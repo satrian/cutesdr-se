@@ -115,6 +115,24 @@ const double SDRIP_SAMPLERATE[MAX_SAMPLERATES] =
 	(80.0e6/40.0)
 };
 
+const quint32 SDRMK15_MAXBW[MAX_SAMPLERATES] =
+{
+	50000,
+	210000,
+	410000,
+	750000
+};
+
+const double SDRMK15_SAMPLERATE[MAX_SAMPLERATES] =
+{
+	(64.0e6/1024.0),		//62500
+	(64.0e6/256.0),			//250000
+	(480000.0),				//480000 (max bitrate supporting 30MHz upper frequency (63.360000MHz F_ADC)
+	(750000.0)				//750000 (max supported freq is 57.0/2=28.5MHz)
+};
+
+//not nice, but we need radio type in netiobase, so instead of porting it from class to class, we are declaring a global variable here ..
+int g_m_RadioType, g_m_RadioType_SDRMK15;
 
 /////////////////////////////////////////////////////////////////////
 // Constructor/Destructor
@@ -180,6 +198,9 @@ if(index >= MAX_SAMPLERATES)
 		case NETSDR:
 			ret = NETSDR_MAXBW[index];
 			break;
+		case SDRMK15:
+			ret = SDRMK15_MAXBW[index];
+			break;
 		default:
 			break;
 	}
@@ -205,6 +226,9 @@ double ret = 1.0;
 			break;
 		case NETSDR:
 			ret = NETSDR_SAMPLERATE[index];
+			break;
+		case SDRMK15:
+			ret = SDRMK15_SAMPLERATE[index];
 			break;
 		default:
 			break;
@@ -261,9 +285,15 @@ quint16 Length;
 					m_RadioType = SDRIQ;
 				else if("SDR-IP" == m_DeviceName)
 					m_RadioType = SDRIP;
-				if("NetSDR" == m_DeviceName)
+				else if("NetSDR" == m_DeviceName)
 					m_RadioType = NETSDR;
-				if( (SDRIP==m_RadioType) || (NETSDR==m_RadioType) )
+				else if("SDR MK1.5 'Andrus'" == m_DeviceName)
+					m_RadioType = SDRMK15;
+
+				g_m_RadioType = m_RadioType;
+				g_m_RadioType_SDRMK15 = SDRMK15;	// enum is only visible inside class, so export globally for reference
+
+				if( (SDRIP==m_RadioType) || (NETSDR==m_RadioType) || (SDRMK15==m_RadioType) )
 				{
 					m_TxMsg.InitTxMsg(TYPE_HOST_REQ_CITEM_RANGE);
 					m_TxMsg.AddCItem(CI_RX_FREQUENCY);
@@ -524,6 +554,7 @@ void CSdrInterface::StartSdr()
 	{
 		case SDRIP:
 		case NETSDR:
+		case SDRMK15:
 			emit NewStatus( RUNNING );
 
 			m_TxMsg.InitTxMsg(TYPE_HOST_SET_CITEM);
@@ -561,6 +592,15 @@ void CSdrInterface::StartSdr()
 			m_TxMsg.AddParm32((quint32)m_SampleRate);
 			SendAscpMsg(&m_TxMsg);
 
+			// If SDR MK1.5, ask radio to use big-endian data
+			if (m_RadioType == SDRMK15)
+			{
+				m_TxMsg.InitTxMsg(TYPE_HOST_SET_CITEM);
+				m_TxMsg.AddCItem(CI_RX_OUTPUT_PARAMS);
+				m_TxMsg.AddParm8(0x80);
+				SendAscpMsg(&m_TxMsg);
+			}
+
 			m_TxMsg.InitTxMsg(TYPE_HOST_SET_CITEM);
 			m_TxMsg.AddCItem(CI_RX_STATE);
 			m_TxMsg.AddParm8(RX_STATE_DATACOMPLEX);
@@ -576,6 +616,7 @@ void CSdrInterface::StartSdr()
 			m_NCOSpurOffsetQ = 0.0;
 			m_NcoSpurCalActive = FALSE;
 			break;
+
 		case SDR14:
 		case SDRIQ:
 			emit NewStatus( RUNNING );
@@ -647,6 +688,9 @@ void CSdrInterface::SetSdrRfGain(qint32 gain)
 			break;
 		case SDRIQ:
 			m_GainCalibrationOffset = -49.0 + SDRIQ_6620FILTERGAIN[m_BandwidthIndex];
+			break;
+		case SDRMK15:
+			m_GainCalibrationOffset = +15.0;
 			break;
 	}
 	m_Fft.SetFFTParams( m_FftSize,
@@ -755,6 +799,10 @@ void CSdrInterface::SetSdrBandwidthIndex(qint32 bwindex)
 		case NETSDR:
 			m_SampleRate = NETSDR_SAMPLERATE[m_BandwidthIndex];
 			m_MaxBandwidth = NETSDR_MAXBW[m_BandwidthIndex];
+			break;
+		case SDRMK15:
+			m_SampleRate = SDRMK15_SAMPLERATE[m_BandwidthIndex];
+			m_MaxBandwidth = SDRMK15_MAXBW[m_BandwidthIndex];
 			break;
 	}
 	SetFftSize(m_FftSize);	//need to tell fft because sample rate has changed

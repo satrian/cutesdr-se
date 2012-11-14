@@ -62,7 +62,7 @@
 /*---------------------------------------------------------------------------*/
 /*--------------------> L O C A L   D E F I N E S <--------------------------*/
 /*---------------------------------------------------------------------------*/
-#define PROGRAM_TITLE_VERSION "CuteSdr 1.05"
+#define PROGRAM_TITLE_VERSION "CuteSDR 1.05 SE"
 
 #define MAX_FFTDB 60
 #define MIN_FFTDB -170
@@ -276,7 +276,7 @@ void MainWindow::AlwaysOnTop()
 /////////////////////////////////////////////////////////////////////
 void MainWindow::writeSettings()
 {
-	QSettings settings( QSettings::UserScope,"MoeTronix", "CuteSdr");
+	QSettings settings( QSettings::UserScope,"MoeTronix", "CuteSdrSE");
 	settings.beginGroup("MainWindow");
 
 	settings.setValue("geometry", saveGeometry());
@@ -376,7 +376,7 @@ void MainWindow::writeSettings()
 
 void MainWindow::readSettings()
 {
-	QSettings settings(QSettings::UserScope,"MoeTronix", "CuteSdr");
+	QSettings settings(QSettings::UserScope,"MoeTronix", "CuteSdrSE");
 	settings.beginGroup("MainWindow");
 
 	restoreGeometry(settings.value("geometry").toByteArray());
@@ -387,24 +387,24 @@ void MainWindow::readSettings()
 
 	settings.beginGroup("Common");
 
-	m_CenterFrequency = (qint64)settings.value("CenterFrequency", 15000000).toUInt();
-	m_SpanFrequency = settings.value("SpanFrequency", 100000).toUInt();
+	m_CenterFrequency = (qint64)settings.value("CenterFrequency", 4600000).toUInt();
+	m_SpanFrequency = settings.value("SpanFrequency", 410000).toUInt();
 	m_IPAdr.setAddress(settings.value("IPAdr", 0xC0A80164).toInt() );
 	m_Port = settings.value("Port", 50000).toUInt();
 	m_RfGain = settings.value("RfGain", 0).toInt();
-	m_BandwidthIndex = settings.value("BandwidthIndex", 0).toInt();
+	m_BandwidthIndex = settings.value("BandwidthIndex", 2).toInt();
 	m_SoundInIndex = settings.value("SoundInIndex", 0).toInt();
 	m_SoundOutIndex = settings.value("SoundOutIndex", 0).toInt();
 	m_StereoOut = settings.value("StereoOut", false).toBool();
-	m_VertScaleIndex = settings.value("VertScaleIndex", 0).toInt();
-	m_MaxdB = settings.value("MaxdB", 0).toInt();
-	m_FftAve = settings.value("FftAve", 0).toInt();
-	m_FftSize = settings.value("FftSize", 4096).toInt();
-	m_MaxDisplayRate = settings.value("MaxDisplayRate", 10).toInt();
-	m_RadioType = settings.value("RadioType", 0).toInt();
+	m_VertScaleIndex = settings.value("VertScaleIndex", 1).toInt();
+	m_MaxdB = settings.value("MaxdB", 0xfffffff1).toInt();
+	m_FftAve = settings.value("FftAve", 1).toInt();
+	m_FftSize = settings.value("FftSize", 16384).toInt();
+	m_MaxDisplayRate = settings.value("MaxDisplayRate", 20).toInt();
+	m_RadioType = settings.value("RadioType", 4).toInt();
 	m_ClickResolution = settings.value("ClickResolution",100).toInt();
 	m_Volume = settings.value("Volume",100).toInt();
-	m_Percent2DScreen = settings.value("Percent2DScreen",50).toInt();
+	m_Percent2DScreen = settings.value("Percent2DScreen",20).toInt();
 
 	m_NCOSpurOffsetI = settings.value("NCOSpurOffsetI",0.0).toDouble();
 	m_NCOSpurOffsetQ = settings.value("NCOSpurOffsetQ",0.0).toDouble();
@@ -413,14 +413,14 @@ void MainWindow::readSettings()
 	m_AlwaysOnTop = settings.value("AlwaysOnTop", false).toBool();
 
 	m_InvertSpectrum = settings.value("InvertSpectrum", false).toBool();
-	m_USFm = settings.value("USFm", true).toBool();
+	m_USFm = settings.value("USFm", false).toBool();
 
 	m_NoiseProcSettings.NBOn = settings.value("NBOn", false).toBool();
 	m_NoiseProcSettings.NBThreshold = settings.value("NBThreshold",0).toInt();
 	m_NoiseProcSettings.NBWidth = settings.value("NBWidth",50).toInt();
 
-	m_DemodMode = settings.value("DemodMode", DEMOD_AM).toInt();
-	m_DemodFrequency = (qint64)settings.value("DemodFrequency", 15000000).toUInt();
+	m_DemodMode = settings.value("DemodMode", DEMOD_USB).toInt();
+	m_DemodFrequency = (qint64)settings.value("DemodFrequency", 4625000).toUInt();
 
 	settings.endGroup();
 
